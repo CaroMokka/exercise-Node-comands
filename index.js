@@ -2,6 +2,8 @@ const { v4: uuidv4 } = require("uuid")
 const clc = require("cli-color")
 const fs = require('fs')
 const yargs = require("yargs")
+
+
 yargs
     .command(
         "saludar", 
@@ -33,7 +35,11 @@ yargs
                     alias: "rd",
                     describe: "Dígito verificador de la persona a registrar",
                     demandOption: true,
-                    type: "string"
+                    type: "string",
+                    coerce: (arg) => {
+                        if(arg.length > 1) throw new Error('El número verificador no debe tener más de 1 caracter')
+                        return arg
+                    }
                 },
                 rut_numero: {
                     alias: "rn",
@@ -101,4 +107,70 @@ yargs
 
         }
     )
+    .command(
+        "modificar",
+        "Comando utilizado para modificar los datos de una persona registrada",
+        {
+            id: {
+                alias: "i",
+                describe: "Identificación única de la persona a modificar",
+                type: "string",
+                demandOption: true
+            },
+            rut_dv: {
+                alias: "rd",
+                describe: "Dígito verificador de la persona a registrar",
+                demandOption: false,
+                type: "string",
+                coerce: (arg) => {
+                    if(arg.length > 1) throw new Error('El número verificador no debe tener más de 1 caracter')
+                    return arg
+                }
+            },
+            rut_numero: {
+                alias: "rn",
+                describe: "Parte númerica del RUT de la persona a registrar",
+                demandOption: false,
+                type: "number"
+            },
+            nombre: {
+                alias: "n",
+                describe: "Nombre para el saludo",
+                demandOption: false,
+                type: "string"
+            },
+            apellido: {
+                alias: "a",
+                describe: "Apellido para el saludo",
+                demandOption: false,
+                type: "string"
+            }
+        },
+        ({ id, rut_dv, rut_numero, nombre, apellido }) => {
+
+            if(rut_dv == undefined && rut_numero == undefined && nombre == undefined && apellido == undefined) {
+                return console.log(clc.yellow("Por favor enviar un atributo a modificar"))
+            }
+
+            const contentText = fs.readFileSync(`${__dirname}/files/personas.txt`, "utf-8")
+            const contentJS = JSON.parse(contentText)
+
+            const busqueda = contentJS.find( item => item.id === id )
+            if(!busqueda) return console.log(clc.red("ID de persona no registrada"))
+            busqueda.nombre = nombre != undefined ? nombre : busqueda.nombre
+            busqueda.apellido = apellido != undefined ? apellido : busqueda.apellido
+            busqueda.rut_dv = rut_dv ? rut_dv : busqueda.rut_dv
+            busqueda.rut_numero = rut_numero ? rut_numero : busqueda.rut_numero 
+
+            fs.writeFileSync(`${__dirname}/files/personas.txt`, JSON.stringify(contentJS), "utf-8")
+            console.log(clc.green("Datos de persona modificada con éxito"))
+
+            //if(busqueda) return console.log(clc.green("Usuario encontrado"), busqueda)
+
+            
+        }
+    )
         .help().argv
+
+        //coerce() validación especifico
+        //check() validación general
