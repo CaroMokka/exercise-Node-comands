@@ -170,6 +170,29 @@ yargs
             
         }
     )
+    .command(
+        "eliminar",
+        "Comando para eliminar personas registradas",
+        {
+            id: {
+                alias: "e",
+                describe: "ID utilizado como referencia para eliminar un registro de persona",
+                demandOption: true,
+                type: "string"
+            }
+        },
+        ({ id }) => {
+            const contentText = fs.readFileSync(`${__dirname}/files/personas.txt`, "utf-8")
+            const contentJS = JSON.parse(contentText) 
+            
+            
+            const deleteElementID = contentJS.filter( item => item.id !== id )
+            if(deleteElementID.length == contentJS.length) return console.log(clc.bgYellowBright("El ID enviado no coincide que el registro de personas"))
+            fs.writeFileSync(`${__dirname}/files/personas.txt`, JSON.stringify(deleteElementID), "utf-8")
+            console.log(clc.bgYellow("El registro de la persona ha sido eliminado"))
+            
+        }
+    )
         .help().argv
 
         //coerce() validación especifico
